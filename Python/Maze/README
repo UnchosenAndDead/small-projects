@@ -1,0 +1,3 @@
+Small maze-solver with graphics made using pygame. Utilizes a recursive algorithm to brute-force it's way to the green square.
+
+Click on tiles to add/remove walls. Press spacebar to begin maze-solving
