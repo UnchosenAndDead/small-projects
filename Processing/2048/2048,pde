@@ -1,0 +1,267 @@
+import javax.swing.JOptionPane;
+class Tile{
+  int x, y, value;    //Coords and value
+  boolean fill;       //True if filled
+  color c;
+  Tile(int nx, int ny, int v){
+    x=nx;
+    y=ny;
+    if(v>0){
+      fill=true;
+    }else{
+      fill=false;
+    }
+    value = v;
+  }
+  void changeColor(){
+    if(value==2){
+      c=#3366FF;
+    }
+    if(value==4){
+      c=#6633FF;
+    }
+    if(value==8){
+      c=#CC33FF;
+    }
+    if(value==16){
+      c=#FF33CC;
+    }
+    if(value==32){
+      c=#FF3366;
+    }
+    if(value==64){
+      c=#FF6633;
+    }
+    if(value==128){
+      c=#FFCC33;
+    }
+    if(value==256){
+      c=#CCFF33;
+    }
+    if(value==512){
+      c=#66FF33;
+    }
+    if(value==1024){
+      c=#33FF66;
+    }
+    if(value>=2048){
+      c=#FF0000;
+    }
+  }
+}
+
+Tile[][] grid = new Tile[4][4];    //4X4 grid for the game
+boolean game;                      //States if the game is still running
+int num;                           //Current number of tiles in the grid
+PFont f;                           // STEP 1 Declare PFont variable
+int score=0;
+
+void setup(){
+  size(400, 400);
+  f = createFont("Arial",16,true); // STEP 2 Create Font
+  for(int i=0; i<4; i++){          //Fill grid fith empty Tiles
+    for(int j=0; j<4; j++){
+      grid[i][j] = new Tile(i*100, j*100, 0);
+    }
+  }
+  game = true;                     //Start game
+  spawnTile();                     //Spawn first 2 tiles
+  spawnTile();
+}
+
+void draw(){
+  frameRate(10);
+  updateNum();
+  if(game){                        //If game is still running, draw filled tiles with values
+    background(255);
+    for(int i = 1; i<4; i++){        //Draw lines
+    line(100*i, 0, 100*i, height);
+    line(0, 100*i, width, 100*i);
+    }
+    for(int i=0; i<4; i++){
+      for(int j=0; j<4; j++){
+        if(grid[i][j].fill){
+          grid[i][j].changeColor();
+          fill(grid[i][j].c);
+          rect(grid[i][j].x, grid[i][j].y, 100, 100);
+          textFont(f, 16);
+          fill(255);
+          textAlign(CENTER);
+          text(grid[i][j].value, grid[i][j].x + 50, grid[i][j].y + 50);
+          textAlign(RIGHT);
+          textFont(f, 10);
+          fill(0);
+          text(score, width-10, 10);
+        }
+      }
+    }
+  }
+}
+
+void spawnTile(){                  //Spawn new tile in free space in grid(if none, call loss)
+  if(num<16){                      //Check if there is a free space
+    while(true){                   //If yes, try to fill it
+      int a, b;
+      a = (int)random(4);          //Choose random spot
+      b = (int)random(4);
+      if(!grid[a][b].fill){        //Check if it's free
+        if((int)random(10)==9)     //Fill
+          grid[a][b].value=4;
+        else
+          grid[a][b].value=2;
+        grid[a][b].fill=true;
+        break;
+      }
+    }
+  }else{                            //No free space => call loss
+    loss();
+  }
+}
+
+void loss(){
+  JOptionPane.showMessageDialog(null,"Game over. Final Score: " + score);
+  game = false;
+  
+}
+
+void killTile(Tile a){
+  a.fill=false;
+  a.value=0;
+}
+
+void updateNum(){
+  num=0;
+  for(int i=0; i<4; i++){
+    for(int j=0; j<4; j++){
+      if(grid[i][j].fill)
+        num++;
+    }
+  }
+}
+
+void keyPressed(){                 //Plz end my life, I can't take it any longer
+  if(key=='w'){                    //If UP
+  //println("UP");
+    for(int i=0; i<4; i++){
+      for(int j=0; j<4; j++){      //Scan through grid(FROM TOP TO BOTTOM)
+        if(grid[j][i].fill){       //Find filled tile
+          int a=i-1;               //Look at one above
+          if(a>=0){                //If it exist
+            while(!grid[j][a].fill&&a>0){  //Try to reach highest one
+              a--;
+            }            
+            if(grid[j][a].fill&&grid[j][a].value==grid[j][i].value&&a!=i){  //If there is tile above and it is the same value
+              grid[j][a].value*=2;                                    //Double it
+              score+=grid[j][a].value;
+              killTile(grid[j][i]);                                     //Destroy the starting tile
+            }else if(!grid[j][a].fill){                               //If there is no tile at [j][a]
+              grid[j][a].value=grid[j][i].value;
+              grid[j][a].fill=true;
+              killTile(grid[j][i]);
+            }else if(a+1==i){                                         //If there should be no movement
+              
+            }else{                                                    //If there is a tile above, but with different value
+              grid[j][a+1].value=grid[j][i].value;
+              grid[j][a+1].fill=true;
+              killTile(grid[j][i]);
+            }
+          }
+        }
+      }
+    }
+    spawnTile();
+  }
+  if(key=='s'){                    //If DOWN
+  //println("DOWN");
+    for(int i=3; i>=0; i--){
+      for(int j=0; j<4; j++){      //Scan through grid(FROM TOP TO BOTTOM)
+        if(grid[j][i].fill){       //Find filled tile
+          int a=i+1;               //Look at one above
+          if(a<=3){                //If it exist
+            while(!grid[j][a].fill&&a<3){  //Try to reach highest one
+              a++;
+            }            
+            if(grid[j][a].fill&&grid[j][a].value==grid[j][i].value&&a!=i){  //If there is tile above and it is the same value
+              grid[j][a].value*=2;                                    //Double it
+              score+=grid[j][a].value;
+              killTile(grid[j][i]);                                     //Destroy the starting tile
+            }else if(!grid[j][a].fill){                               //If there is no tile at [j][a]
+              grid[j][a].value=grid[j][i].value;
+              grid[j][a].fill=true;
+              killTile(grid[j][i]);
+            }else if(a-1==i){                                         //If there should be no movement
+              
+            }else{                                                    //If there is a tile above, but with different value
+              grid[j][a-1].value=grid[j][i].value;
+              grid[j][a-1].fill=true;
+              killTile(grid[j][i]);
+            }
+          }
+        }
+      }
+    }
+    spawnTile();
+  }
+  if(key=='a'){
+   // println("LEFT");
+    for(int i=0; i<4; i++){
+      for(int j=0; j<4; j++){      //Scan through grid(FROM TOP TO BOTTOM)
+        if(grid[i][j].fill){       //Find filled tile
+          int a=i-1;               //Look at one above
+          if(a>=0){                //If it exist
+            while(!grid[a][j].fill&&a>0){  //Try to reach highest one
+              a--;
+            }            
+            if(grid[a][j].fill&&grid[a][j].value==grid[i][j].value&&a!=i){  //If there is tile above and it is the same value
+              grid[a][j].value*=2;                                    //Double it
+              score+=grid[a][j].value;
+              killTile(grid[i][j]);                                     //Destroy the starting tile
+            }else if(!grid[a][j].fill){                               //If there is no tile at [j][a]
+              grid[a][j].value=grid[i][j].value;
+              grid[a][j].fill=true;
+              killTile(grid[i][j]);
+            }else if(a+1==i){                                         //If there should be no movement
+              
+            }else{                                                    //If there is a tile above, but with different value
+              grid[a+1][j].value=grid[i][j].value;
+              grid[a+1][j].fill=true;
+              killTile(grid[i][j]);
+            }
+          }
+        }
+      }
+    }
+    spawnTile();
+  }
+  if(key=='d'){
+    //println("RIGHT");
+    for(int i=3; i>=0; i--){
+      for(int j=0; j<4; j++){      //Scan through grid(FROM TOP TO BOTTOM)
+        if(grid[i][j].fill){       //Find filled tile
+          int a=i+1;               //Look at one above
+          if(a<=3){                //If it exist
+            while(!grid[a][j].fill&&a<3){  //Try to reach highest one
+              a++;
+            }            
+            if(grid[a][j].fill&&grid[a][j].value==grid[i][j].value&&a!=i){  //If there is tile above and it is the same value
+              grid[a][j].value*=2;                                    //Double it
+              score+=grid[j][a].value;
+              killTile(grid[i][j]);                                     //Destroy the starting tile
+            }else if(!grid[a][j].fill){                               //If there is no tile at [j][a]
+              grid[a][j].value=grid[i][j].value;
+              grid[a][j].fill=true;
+              killTile(grid[i][j]);
+            }else if(a-1==i){                                         //If there should be no movement
+              
+            }else{                                                    //If there is a tile above, but with different value
+              grid[a-1][j].value=grid[i][j].value;
+              grid[a-1][j].fill=true;
+              killTile(grid[i][j]);
+            }
+          }
+        }
+      }
+    }
+    spawnTile();
+  }
+}
